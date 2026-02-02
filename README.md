@@ -92,6 +92,20 @@ Manual Create
 
 ## ✅ Features Included
 
+## ✨ Features (OpenCode MVP)
+
+- 🔐 Authentication using **Clerk**
+- 📊 Subscription dashboard with monthly & yearly spend
+- ✏️ Add, edit, and delete subscriptions
+- ⏰ Track upcoming renewals and free trials
+- 📥 Gmail email ingestion (read‑only, keyword‑based)
+- 🗂️ Filter subscriptions by category, status, and billing cycle
+- 📈 Dashboard summary widgets + spend trends
+- 🧠 Vendor normalization + confidence scoring
+- 🧩 Candidate dedupe to avoid repeated subscriptions
+- 🔔 Renewal alert rules with configurable windows
+- 💸 Currency switching for totals (USD/INR/EUR/GBP)
+
 ### Authentication
 - Clerk sign in/out
 - Protected dashboard routes
