@@ -1,4 +1,8 @@
-# SubSentry — Subscription Visibility & Gmail Intelligence Platform
+<p align="center">
+  <img src="client/public/logo.svg" alt="SubSentry logo" width="96" />
+</p>
+<h1 align="center">SubSentry</h1>
+<p align="center"><em>Subscription Visibility & Gmail Intelligence Platform</em></p>
 
 SubSentry is a **privacy‑first subscription intelligence system** that helps users discover, track, and optimize recurring payments. It combines **manual subscription management** with **Gmail‑based ingestion (read‑only)** to surface hidden subscriptions, renewal risks, and spending trends.
 
