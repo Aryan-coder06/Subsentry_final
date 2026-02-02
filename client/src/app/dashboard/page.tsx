@@ -1,0 +1,398 @@
+'use client';
+
+import { Subscription } from '@/lib/api';
+import { getServiceColors, getServiceIcon } from '@/lib/service-icons';
+import {
+  cn,
+  convertCurrency,
+  CURRENCY_OPTIONS,
+  formatCurrency,
+  formatDate,
+  getCategoryColor,
+  getDaysUntilRenewal,
+  isUrgentRenewal,
+} from '@/lib/utils';
+import { useAuth } from '@clerk/nextjs';
+import {
+  AlertTriangle,
+  ArrowRight,
+  Loader2,
+  Plus,
+  TrendingUp,
+} from 'lucide-react';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import DashboardLayout from '../components/DashboardLayout';
+import SummaryWidgets from './SummaryWidgets';
+import UpcomingRenewals from './UpcomingRenewals';
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+export default function Dashboard() {
+  const { getToken } = useAuth();
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [displayCurrency, setDisplayCurrency] = useState('USD');
+  const [analytics, setAnalytics] = useState<{
+    monthlySpend?: number;
+    yearlySpend?: number;
+    activeCount?: number;
+    trialCount?: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = await getToken?.();
+
+        const headers: Record<string, string> = {};
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+
+        const [subscriptionsRes, analyticsRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/api/subscriptions`, { headers }),
+          fetch(`${API_BASE_URL}/api/analytics/overview`, { headers }),
+        ]);
+
+        if (!subscriptionsRes.ok) {
+          throw new Error(`API error: ${subscriptionsRes.status}`);
+        }
+
+        const data = await subscriptionsRes.json();
+        setSubscriptions(Array.isArray(data.data) ? data.data : []);
+
+        if (analyticsRes.ok) {
+          const analyticsPayload = await analyticsRes.json();
+          setAnalytics(analyticsPayload?.overview ?? null);
+        }
+      } catch (err) {
+        console.error('Failed to fetch subscriptions', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [getToken]);
+
+  // Calculate stats
+  const activeSubscriptions = subscriptions.filter(
+    (s) => s.status === 'active'
+  );
+  const urgentRenewals = subscriptions.filter(
+    (s) => s.status === 'active' && isUrgentRenewal(s.renewalDate)
+  );
+  const trialsEnding = subscriptions.filter(
+    (s) => s.isTrial && s.trialEndsAt && getDaysUntilRenewal(s.trialEndsAt) <= 7
+  );
+
+  // Get recent subscriptions sorted by renewal date
+  const recentSubscriptions = [...subscriptions]
+    .filter((s) => s.status === 'active')
+    .sort(
+      (a, b) =>
+        new Date(a.renewalDate).getTime() - new Date(b.renewalDate).getTime()
+    )
+    .slice(0, 5);
+
+  if (isLoading) {
+    return (
+      <DashboardLayout
+        title="Dashboard"
+        subtitle="Overview of your subscriptions"
+      >
+        <div className="flex items-center justify-center py-20">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+            <p className="text-gray-400">Loading dashboard...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  return (
+    <DashboardLayout
+      title="Dashboard"
+      subtitle="Overview of your subscriptions"
+    >
+      {/* Welcome Banner */}
+      <div className="mb-6 p-6 rounded-2xl bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 border border-blue-500/20">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-semibold text-white mb-1">
+              Welcome back! 👋
+            </h2>
+            <p className="text-gray-400">
+              You have{' '}
+              {urgentRenewals.length > 0 ? (
+                <span className="text-amber-400 font-medium">
+                  {urgentRenewals.length} upcoming renewal
+                  {urgentRenewals.length > 1 ? 's' : ''}
+                </span>
+              ) : (
+                'no urgent renewals'
+              )}{' '}
+              in the next 3 days.
+            </p>
+          </div>
+          <Link
+            href="/subscriptions"
+            className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Subscription
+          </Link>
+        </div>
+      </div>
+
+      {/* Dashboard Summary Widgets */}
+      <div className="flex items-center justify-end mb-3">
+        <select
+          value={displayCurrency}
+          onChange={(e) => setDisplayCurrency(e.target.value)}
+          className="appearance-none px-3 py-2 text-sm rounded-lg border border-[#2a2a2a] bg-[#0f0f0f] text-gray-300 outline-none cursor-pointer hover:border-[#3a3a3a] transition-colors"
+        >
+          {CURRENCY_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <SummaryWidgets
+        subscriptions={subscriptions}
+        displayCurrency={displayCurrency}
+        analytics={analytics ?? undefined}
+      />
+
+      {/* Upcoming Renewals Section */}
+      <UpcomingRenewals
+        subscriptions={subscriptions}
+        displayCurrency={displayCurrency}
+      />
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Recent Subscriptions */}
+        <div className="lg:col-span-2 bg-[#0f0f0f] rounded-xl border border-[#1a1a1a] p-6">
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="text-lg font-semibold text-white">
+              Upcoming Renewals
+            </h3>
+            <Link
+              href="/subscriptions"
+              className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors"
+            >
+              View all <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          {recentSubscriptions.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-400">No active subscriptions</p>
+              <Link
+                href="/subscriptions"
+                className="text-blue-400 hover:text-blue-300 text-sm mt-2 inline-block"
+              >
+                Add your first subscription
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {recentSubscriptions.map((sub) => {
+                const daysUntil = getDaysUntilRenewal(sub.renewalDate);
+                const isUrgent = isUrgentRenewal(sub.renewalDate);
+                const categoryColors = getCategoryColor(sub.category);
+                const initials = sub.name
+                  .split(' ')
+                  .map((w) => w[0])
+                  .slice(0, 2)
+                  .join('')
+                  .toUpperCase();
+
+                // Get service-specific icon and colors
+                const serviceIcon = getServiceIcon(sub.name);
+                const serviceColors = getServiceColors(sub.name);
+                const iconBg = serviceColors?.bg || categoryColors.bg;
+                const iconText = serviceColors?.text || categoryColors.text;
+
+                return (
+                  <div
+                    key={sub._id}
+                    className={cn(
+                      'flex items-center gap-4 p-4 rounded-xl border transition-colors hover:bg-[#141414]',
+                      isUrgent
+                        ? 'border-amber-500/30 bg-amber-500/5'
+                        : 'border-[#1a1a1a]'
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        'w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0',
+                        iconBg,
+                        iconText
+                      )}
+                    >
+                      {serviceIcon || initials}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-white truncate">
+                          {sub.name}
+                        </span>
+                        {sub.isTrial && (
+                          <span className="px-1.5 py-0.5 text-xs font-medium bg-amber-500/20 text-amber-400 rounded">
+                            Trial
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-sm text-gray-500">
+                        {sub.category}
+                      </span>
+                    </div>
+                    <div className="text-right hidden sm:block">
+                      <div className="font-semibold text-white">
+                        {formatCurrency(
+                          convertCurrency(
+                            sub.amount,
+                            sub.currency || 'USD',
+                            displayCurrency
+                          ),
+                          displayCurrency
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        /{sub.billingCycle === 'yearly' ? 'year' : 'mo'}
+                      </div>
+                    </div>
+                    <div
+                      className={cn(
+                        'text-right',
+                        isUrgent ? 'text-amber-400' : 'text-gray-400'
+                      )}
+                    >
+                      <div className="flex items-center gap-1.5 justify-end">
+                        {isUrgent && <AlertTriangle className="w-3.5 h-3.5" />}
+                        <span className="text-sm font-medium">
+                          {daysUntil === 0
+                            ? 'Today'
+                            : daysUntil === 1
+                              ? 'Tomorrow'
+                              : `${daysUntil}d`}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {formatDate(sub.renewalDate)}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Quick Actions & Insights */}
+        <div className="space-y-6">
+          {/* Quick Actions */}
+          <div className="bg-[#0f0f0f] rounded-xl border border-[#1a1a1a] p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">
+              Quick Actions
+            </h3>
+            <div className="space-y-3">
+              <Link
+                href="/subscriptions/new"
+                className="flex items-center gap-3 p-3 rounded-lg bg-[#1a1a1a] hover:bg-[#2a2a2a] transition-colors"
+              >
+                <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                  <Plus className="w-5 h-5 text-blue-400" />
+                </div>
+                <div>
+                  <div className="font-medium text-white">Add Subscription</div>
+                  <div className="text-xs text-gray-500">
+                    Track a new service
+                  </div>
+                </div>
+              </Link>
+              <Link
+                href="/analytics"
+                className="flex items-center gap-3 p-3 rounded-lg bg-[#1a1a1a] hover:bg-[#2a2a2a] transition-colors"
+              >
+                <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-purple-400" />
+                </div>
+                <div>
+                  <div className="font-medium text-white">View Analytics</div>
+                  <div className="text-xs text-gray-500">
+                    See spending trends
+                  </div>
+                </div>
+              </Link>
+            </div>
+          </div>
+
+          {/* Spending Insight */}
+          <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20 p-6">
+            <div className="flex items-center gap-2 mb-3">
+              <TrendingUp className="w-5 h-5 text-blue-400" />
+              <h3 className="font-semibold text-white">Spending Insight</h3>
+            </div>
+            <p className="text-sm text-gray-400 mb-4">
+              Your productivity tools account for{' '}
+              <span className="text-white font-medium">
+                {formatCurrency(
+                  subscriptions
+                    .filter(
+                      (s) =>
+                        s.category === 'productivity' && s.status === 'active'
+                    )
+                    .reduce(
+                      (sum, s) =>
+                        sum +
+                        convertCurrency(
+                          s.amount,
+                          s.currency || 'USD',
+                          displayCurrency
+                        ),
+                      0
+                    ),
+                  displayCurrency
+                )}
+              </span>{' '}
+              of your monthly spend.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {Array.from(
+                new Set(
+                  subscriptions
+                    .filter((s) => s.status === 'active')
+                    .map((s) => s.category)
+                )
+              ).map((category) => {
+                const colors = getCategoryColor(category);
+                const count = subscriptions.filter(
+                  (s) => s.category === category && s.status === 'active'
+                ).length;
+                return (
+                  <span
+                    key={category}
+                    className={cn(
+                      'px-2 py-1 rounded-full text-xs font-medium capitalize',
+                      colors.bg,
+                      colors.text
+                    )}
+                  >
+                    {category} ({count})
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+}
