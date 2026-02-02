@@ -29,7 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { getServiceIcon, getServiceColors } from '@/lib/service-icons';
+import { getServiceColors, ServiceIcon } from '@/lib/service-icons';
 import * as Dialog from '@radix-ui/react-dialog';
 
 interface UpdateSubscriptionModalProps {
@@ -117,7 +117,6 @@ export default function UpdateSubscriptionModal({
   const [operationState, setOperationState] = useState<OperationState>('idle');
   const [operationMessage, setOperationMessage] = useState('');
 
-  const icon = useMemo(() => getServiceIcon(formState.serviceName), [formState.serviceName]);
   const colors = useMemo(() => getServiceColors(formState.serviceName), [formState.serviceName]);
 
   // Initialize form with subscription data
@@ -256,21 +255,19 @@ export default function UpdateSubscriptionModal({
             {/* Modal Header */}
             <div className="flex items-start gap-4 mb-6 pb-6 border-b border-white/10">
               <div className="flex-shrink-0">
-                {icon ? (
-                  <div className={cn('w-14 h-14 rounded-xl flex items-center justify-center', colors?.bg)}>
-                    {icon}
-                  </div>
-                ) : (
-                  <div
-                    className={cn(
-                      'w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold',
-                      colors?.bg || 'bg-gradient-to-br from-purple-500/20 to-pink-500/20',
-                      colors?.text || 'text-white'
-                    )}
-                  >
-                    {formState.serviceName.charAt(0).toUpperCase() || 'U'}
-                  </div>
-                )}
+                <div
+                  className={cn(
+                    'w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold',
+                    colors?.bg || 'bg-gradient-to-br from-purple-500/20 to-pink-500/20',
+                    colors?.text || 'text-white'
+                  )}
+                >
+                  <ServiceIcon
+                    name={formState.serviceName}
+                    fallback={formState.serviceName.charAt(0).toUpperCase() || 'U'}
+                    className="w-7 h-7"
+                  />
+                </div>
               </div>
               <div className="flex-1">
                 <Dialog.Title className="text-2xl font-bold text-white">

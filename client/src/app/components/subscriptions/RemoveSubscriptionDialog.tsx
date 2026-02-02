@@ -6,7 +6,7 @@ import { AlertTriangle, Trash2, Loader2, AlertCircle } from 'lucide-react';
 import { Subscription } from '@/lib/api';
 import { cn, formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { getServiceIcon, getServiceColors } from '@/lib/service-icons';
+import { getServiceColors, ServiceIcon } from '@/lib/service-icons';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
 
 interface RemoveSubscriptionDialogProps {
@@ -25,7 +25,6 @@ export default function RemoveSubscriptionDialog({
   const [removing, setRemoving] = useState(false);
   const [removalError, setRemovalError] = useState('');
 
-  const icon = subscriptionData ? getServiceIcon(subscriptionData.name) : null;
   const colors = subscriptionData ? getServiceColors(subscriptionData.name) : null;
 
   const executeRemoval = useCallback(async () => {
@@ -120,21 +119,19 @@ export default function RemoveSubscriptionDialog({
                       <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-rose-500/10 rounded-2xl blur-lg group-hover:blur-xl transition-all" />
                       <div className="relative bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur-sm">
                         <div className="flex items-center gap-4">
-                          {icon ? (
-                            <div className={cn('w-14 h-14 rounded-xl flex items-center justify-center shadow-lg', colors?.bg)}>
-                              {icon}
-                            </div>
-                          ) : (
-                            <div
-                              className={cn(
-                                'w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold shadow-lg',
-                                colors?.bg || 'bg-gradient-to-br from-gray-500/30 to-gray-600/30',
-                                colors?.text || 'text-white'
-                              )}
-                            >
-                              {subscriptionData.name.charAt(0).toUpperCase()}
-                            </div>
-                          )}
+                          <div
+                            className={cn(
+                              'w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold shadow-lg',
+                              colors?.bg || 'bg-gradient-to-br from-gray-500/30 to-gray-600/30',
+                              colors?.text || 'text-white'
+                            )}
+                          >
+                            <ServiceIcon
+                              name={subscriptionData.name}
+                              fallback={subscriptionData.name.charAt(0).toUpperCase()}
+                              className="w-7 h-7"
+                            />
+                          </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="text-lg font-semibold text-white truncate">
                               {subscriptionData.name}

@@ -1,7 +1,7 @@
 'use client';
 
 import { Subscription } from '@/lib/api';
-import { getServiceColors, getServiceIcon } from '@/lib/service-icons';
+import { getServiceColors, ServiceIcon } from '@/lib/service-icons';
 import {
   cn,
   convertCurrency,
@@ -214,7 +214,6 @@ export default function Dashboard() {
                   .toUpperCase();
 
                 // Get service-specific icon and colors
-                const serviceIcon = getServiceIcon(sub.name);
                 const serviceColors = getServiceColors(sub.name);
                 const iconBg = serviceColors?.bg || categoryColors.bg;
                 const iconText = serviceColors?.text || categoryColors.text;
@@ -236,7 +235,7 @@ export default function Dashboard() {
                         iconText
                       )}
                     >
-                      {serviceIcon || initials}
+                      <ServiceIcon name={sub.name} fallback={initials} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">

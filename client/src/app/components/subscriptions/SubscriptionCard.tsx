@@ -11,7 +11,7 @@ import {
   getBillingCycleLabel,
   getSourceIcon,
 } from '@/lib/utils';
-import { getServiceIcon, getServiceColors } from '@/lib/service-icons';
+import { getServiceColors, ServiceIcon } from '@/lib/service-icons';
 import { 
   Calendar, 
   AlertTriangle,
@@ -61,7 +61,6 @@ export default function SubscriptionCard({
   const isTrialEndingSoon = isTrial && daysUntil <= 3 && daysUntil >= 0;
   
   // Get service-specific icon and colors
-  const serviceIcon = getServiceIcon(subscription.name);
   const serviceColors = getServiceColors(subscription.name);
 
   const initials = subscription.name
@@ -116,7 +115,7 @@ export default function SubscriptionCard({
               iconText
             )}
           >
-            {serviceIcon || initials}
+            <ServiceIcon name={subscription.name} fallback={initials} />
           </motion.div>
 
           {/* Main Info */}

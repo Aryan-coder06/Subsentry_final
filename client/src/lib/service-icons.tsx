@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 
 // Service-specific icons/logos as SVG components
 const serviceIcons: Record<string, React.ReactNode> = {
@@ -208,4 +208,56 @@ export function getServiceColors(serviceName: string): { bg: string; text: strin
   }
   
   return null;
+}
+
+const SIMPLE_ICON_OVERRIDES: Record<string, string> = {
+  'amazon prime': 'amazonprime',
+  'disney+': 'disneyplus',
+  'google one': 'googleone',
+  'xbox game pass': 'xboxgamepass',
+  'playstation plus': 'playstationplus',
+  'apple fitness': 'applefitnessplus',
+  'medium premium': 'medium',
+  '1password': '1password',
+  substack: 'substack',
+  treenation: 'treenation',
+};
+
+function toSimpleIconSlug(name: string): string {
+  const normalized = name
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/\+/g, 'plus')
+    .replace(/[^a-z0-9]/g, '');
+  return SIMPLE_ICON_OVERRIDES[normalized] || normalized;
+}
+
+export function ServiceIcon({
+  name,
+  className,
+  fallback,
+}: {
+  name: string;
+  className?: string;
+  fallback?: React.ReactNode;
+}) {
+  const [failed, setFailed] = useState(false);
+
+  const localIcon = useMemo(() => getServiceIcon(name), [name]);
+  if (localIcon) return localIcon;
+
+  const slug = useMemo(() => toSimpleIconSlug(name), [name]);
+  if (!slug || failed) {
+    return <>{fallback ?? null}</>;
+  }
+
+  return (
+    <img
+      src={`https://cdn.simpleicons.org/${slug}?viewbox=auto`}
+      alt={`${name} logo`}
+      className={className ?? 'w-6 h-6'}
+      onError={() => setFailed(true)}
+      loading="lazy"
+    />
+  );
 }

@@ -3,6 +3,7 @@
 import { UserButton } from '@clerk/nextjs';
 import Image from 'next/image';
 import { Bell, Search } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 import { MobileMenuButton } from './Sidebar';
 
 interface HeaderProps {
@@ -12,6 +13,20 @@ interface HeaderProps {
 }
 
 export default function Header({ title, subtitle, onMobileMenuClick }: HeaderProps) {
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   return (
     <header className="bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-[#1a1a1a] h-16 flex items-center justify-between px-4 md:px-6 sticky top-0 z-30">
       <div className="flex items-center gap-4">
@@ -49,6 +64,8 @@ export default function Header({ title, subtitle, onMobileMenuClick }: HeaderPro
             type="text"
             placeholder="Search subscriptions..."
             className="bg-transparent text-sm text-white placeholder-gray-500 outline-none w-48"
+            ref={searchRef}
+            aria-label="Search subscriptions"
           />
           <kbd className="hidden xl:inline-flex items-center gap-1 px-1.5 py-0.5 text-xs text-gray-500 bg-[#2a2a2a] rounded">
             Ctrl + K

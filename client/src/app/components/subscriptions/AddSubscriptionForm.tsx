@@ -34,7 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { getServiceIcon, getServiceColors } from '@/lib/service-icons';
+import { getServiceColors, ServiceIcon } from '@/lib/service-icons';
 
 // Form field types
 interface FormData {
@@ -119,7 +119,6 @@ export default function AddSubscriptionForm() {
   const [errorMessage, setErrorMessage] = useState('');
 
   // Get dynamic icon preview
-  const serviceIcon = getServiceIcon(formData.name);
   const serviceColors = getServiceColors(formData.name);
 
   // Validate form
@@ -287,11 +286,14 @@ export default function AddSubscriptionForm() {
                       serviceColors?.bg || 'bg-gray-500/20'
                     )}
                   >
-                    {serviceIcon || (
-                      <span className={cn('text-sm font-bold', serviceColors?.text || 'text-gray-400')}>
-                        {formData.name.charAt(0).toUpperCase()}
-                      </span>
-                    )}
+                    <ServiceIcon
+                      name={formData.name}
+                      fallback={
+                        <span className={cn('text-sm font-bold', serviceColors?.text || 'text-gray-400')}>
+                          {formData.name.charAt(0).toUpperCase()}
+                        </span>
+                      }
+                    />
                   </div>
                   <div className="flex-1">
                     <p className="text-sm text-gray-400">Preview</p>

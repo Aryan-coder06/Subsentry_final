@@ -1,5 +1,5 @@
 import { Card } from '@/components/ui/card';
-import { getServiceColors, getServiceIcon } from '@/lib/service-icons';
+import { getServiceColors, ServiceIcon } from '@/lib/service-icons';
 import { convertCurrency, formatCurrency, getDaysUntilRenewal } from '@/lib/utils';
 import { format } from 'date-fns';
 import { AlertTriangle, Calendar } from 'lucide-react';
@@ -60,7 +60,6 @@ const UpcomingRenewals: React.FC<UpcomingRenewalsProps> = ({
         {upcoming.map((sub) => {
           const days = getDaysUntilRenewal(sub.renewalDate);
           const urgency = getUrgency(days);
-          const icon = getServiceIcon(sub.name);
           const colors = getServiceColors(sub.name);
           return (
             <Card
@@ -76,15 +75,15 @@ const UpcomingRenewals: React.FC<UpcomingRenewalsProps> = ({
               `}
             >
               <div className="flex items-center gap-3 min-w-0 flex-1">
-                {icon && (
-                  <span
-                    className={`inline-flex items-center justify-center w-9 h-9 rounded-lg shadow ${colors?.bg ?? 'bg-[#232323]'}`}
-                  >
-                    <span className={`w-6 h-6 ${colors?.icon ?? 'text-white'}`}>
-                      {icon}
-                    </span>
-                  </span>
-                )}
+                <span
+                  className={`inline-flex items-center justify-center w-9 h-9 rounded-lg shadow ${colors?.bg ?? 'bg-[#232323]'}`}
+                >
+                  <ServiceIcon
+                    name={sub.name}
+                    className={`w-5 h-5 ${colors?.icon ?? 'text-white'}`}
+                    fallback={sub.name.charAt(0).toUpperCase()}
+                  />
+                </span>
                 <div className="flex flex-col min-w-0">
                   <span className="font-medium text-white truncate text-base">
                     {sub.name}
