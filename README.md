@@ -1,76 +1,114 @@
 # SubSentry — Subscription Visibility & Gmail Intelligence Platform
 
-SubSentry is a privacy‑first subscription intelligence system that helps users **discover, track, and optimize recurring payments**. It combines **manual subscription management** with **Gmail‑based ingestion** (read‑only) to surface hidden subscriptions, renewal risks, and spending trends.
+SubSentry is a **privacy‑first subscription intelligence system** that helps users discover, track, and optimize recurring payments. It combines **manual subscription management** with **Gmail‑based ingestion (read‑only)** to surface hidden subscriptions, renewal risks, and spending trends.
 
-This repo contains the **final Week‑6 build** of the project, organized as a production‑ready, modular full‑stack app.
-
----
-
-## ✨ What SubSentry Delivers
-
-**Core problem:** Most users have no clear view of *what they are subscribed to*, *when renewals happen*, or *how much they spend monthly*. SubSentry solves this with a system that:
-
-- Detects subscriptions from Gmail receipts (read‑only)
-- Normalizes vendors and deduplicates signals
-- Tracks renewals, trials, and categories
-- Provides analytics dashboards and alerts
+This repository contains the **final Week‑6 production‑ready build** of the system.
 
 ---
 
-## 🧠 How It Works (System Flow)
+## 🚩 The Problem It Solves
+
+Most users don’t know:
+- **What they are subscribed to** across apps and services
+- **When renewals happen** (and what’s about to charge)
+- **How much they spend monthly / yearly**
+
+Subscriptions are scattered across emails and apps. Many are silent renewals or trial traps. SubSentry makes recurring charges **visible, structured, and actionable**.
+
+---
+
+## ✅ How SubSentry Solves It
+
+1. **Gmail Ingestion (Read‑Only)**
+   - Connect Gmail safely via OAuth
+   - Fetch transaction receipts
+
+2. **Parsing + Intelligence**
+   - Parse email content into vendor, plan, price, date
+   - Normalize vendor names
+   - Score confidence and dedupe noisy signals
+
+3. **Subscription System of Record**
+   - Create clean subscription entries
+   - Track renewal date, billing cycle, status, trial
+
+4. **Insights & Alerts**
+   - Analytics: monthly/annual spend, category breakdown, trends
+   - Alerts: renewals within user‑defined window
+
+---
+
+## 🧠 System Flow (End‑to‑End)
 
 ```
-Gmail OAuth (Read‑Only) → Email Fetch → Parse & Score → Candidate Store → Save to Subscriptions
+Gmail OAuth (Read‑Only)
+  → Fetch Emails
+  → Parse + Score
+  → Candidate Store (dedupe)
+  → Save to Subscriptions
 
-Manual Create → Subscription Store → Analytics / Alerts / Renewals UI
+Manual Create
+  → Subscription Store
+  → Analytics / Alerts / Renewals UI
 ```
 
-**Key intelligence steps:**
-1. **Ingestion**: Gmail OAuth collects read‑only transactional email data.
-2. **Parsing**: Emails are parsed to extract merchant, plan, price, date, and renewal pattern.
-3. **Vendor Resolver + Confidence Scoring**: Normalizes vendors (e.g., “YouTube Premium” → “YouTube”) and assigns confidence scores.
-4. **Candidate Dedupe**: Creates a dedupe hash to avoid repeated subscriptions.
-5. **Save Workflow**: Candidates can be saved as real subscriptions.
-6. **Analytics + Alerts**: Monthly/annual spend, category breakdowns, and renewal alerts are computed server‑side.
+---
+
+## 🧩 Core Intelligence Modules
+
+**Vendor Resolver**
+- Normalizes provider names (e.g., “YouTube Premium” → “YouTube”).
+
+**Confidence Scoring**
+- Assigns reliability scores to parsed results (amount, billing, category, etc.).
+
+**Candidate Dedupe**
+- Dedupe hashes prevent repeated subscriptions from multiple receipts.
+
+**Analytics Engine**
+- Aggregates monthly/annual spend + category breakdown + trend series.
+
+**Alert Rule Engine**
+- User‑defined renewal window (3/7/14/30 days) for upcoming notifications.
 
 ---
 
 ## 🏗️ Architecture
 
-**Frontend**: Next.js (App Router) + Clerk Auth
-- Secure routes via Clerk
-- Dashboard UI for subscriptions, analytics, renewals, settings
+**Frontend** — Next.js (App Router) + Clerk
+- Secure authentication (Clerk)
+- Dashboard: subscriptions, analytics, renewals, settings
 
-**Backend**: Express + MongoDB (Mongoose)
-- REST API for subscriptions, analytics, alerts, Gmail flows
-- Encryption for Gmail tokens
-- Modular service layer for parsing + saving
+**Backend** — Express + MongoDB (Mongoose)
+- REST API: subscriptions, Gmail, analytics, alerts
+- Encrypted OAuth token storage
+- Modular services for parsing + saving
 
 ---
 
 ## ✅ Features Included
 
-### ✅ Authentication
-- Clerk‑based sign in/out
-- Protected routes for dashboard
+### Authentication
+- Clerk sign in/out
+- Protected dashboard routes
 
-### ✅ Subscription Management
+### Subscription Management
 - Create, update, delete subscriptions
 - Status, category, billing cycle, source, trial tracking
 
-### ✅ Analytics Engine
-- Monthly + yearly spend summary
-- Category spend breakdown
-- Trend series across recent months
-
-### ✅ Renewal Alerts
-- Configurable alert window
-- Upcoming renewals API
-
-### ✅ Gmail Integration
+### Gmail Integration
 - OAuth (read‑only)
-- Email fetch + parse + save pipeline
-- Candidate deduping + scoring
+- Fetch + parse + save pipeline
+- Candidate scoring + dedupe
+
+### Analytics
+- Monthly + yearly spend
+- Category breakdown
+- Trend series over recent months
+
+### Renewal Alerts
+- Configurable alert windows
+- Upcoming renewals API
 
 ---
 
@@ -86,7 +124,7 @@ Subsentry_final/
     └── src/
         ├── controllers/  # Subscription, analytics, alerts, Gmail
         ├── models/       # Subscription, Candidate, GmailToken, AlertRule
-        ├── services/     # Email parsing, saving, vendor resolver, confidence scoring
+        ├── services/     # Parsing, saving, resolver, confidence scoring
         └── routes/       # REST endpoints
 ```
 
@@ -184,12 +222,21 @@ pnpm dev
 
 ---
 
-## 📌 Future Extensions
+## ⚠️ Known Limitations
+
+- Currency conversion uses static rates (demo‑grade)
+- Alert rules are API‑level only (no external notifications yet)
+- Candidate approval flow is API‑side (UI can be expanded)
+
+---
+
+## 🚀 Future Extensions
 
 - Dark‑pattern firewall extension
-- Automatic vendor cancellation workflows
-- Spend optimization tips
-- Shared family subscription plans
+- Auto‑cancel workflows and vendor notifications
+- ML‑driven vendor classification
+- Spend optimization recommendations
+- Family plan sharing
 
 ---
 
