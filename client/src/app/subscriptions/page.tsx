@@ -224,7 +224,7 @@ export default function SubscriptionsPage() {
       )}
 
       {/* Toolbar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-6">
         <FilterBar
           statusFilter={statusFilter}
           billingCycleFilter={billingCycleFilter}
@@ -236,7 +236,7 @@ export default function SubscriptionsPage() {
           activeFiltersCount={activeFiltersCount}
         />
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full xl:w-auto">
           <SortDropdown
             sortField={sortField}
             sortOrder={sortOrder}
@@ -258,9 +258,10 @@ export default function SubscriptionsPage() {
             <RefreshCw className={cn('w-4 h-4', isLoading && 'animate-spin')} />
           </Button>
 
-          <Link href="/subscriptions/new" className="ml-auto">
-            <ShimmerButton className="flex items-center gap-2 h-10 px-4">
+          <Link href="/subscriptions/new" className="w-full sm:w-auto sm:ml-auto">
+            <ShimmerButton className="flex items-center justify-center gap-2 h-10 px-4 w-full sm:w-auto">
               <span className="hidden sm:inline">+ Add New</span>
+              <span className="sm:hidden">Add</span>
             </ShimmerButton>
           </Link>
         </div>
